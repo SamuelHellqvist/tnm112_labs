@@ -71,7 +71,7 @@ class MLP:
                 a = activation(z, self.activation)
             # 4. Specify the final layer, with 'softmax' activation
             z = np.dot(self.W[-1], a) + self.b[-1]
-            y[i] = activation(z, 'softmax')
+            y[i] = activation(z.T, 'softmax')[0]
         return y
 
 
@@ -87,18 +87,18 @@ class MLP:
         # compare them to the true labels. We count how many times the predicted 
         # class (the one with the highest probability) matches the true class, 
         # and then we divide by the total number of samples to get the accuracy.
-        y_pred = self.feedforward(self.dataset.X_train)
+        y_pred = self.feedforward(self.dataset.x_train)
         
-        train_loss = np.mean(np.square(y_pred - self.dataset.y_train))
+        train_loss = np.mean(np.square(y_pred - self.dataset.y_train_oh))
         
-        train_acc = np.mean(np.argmax(y_pred, axis=1) == np.argmax(self.dataset.y_train, axis=1))
+        train_acc = np.mean(np.argmax(y_pred, axis=1) == self.dataset.y_train)
         
         print("\tTrain loss:     %0.4f"%train_loss)
         print("\tTrain accuracy: %0.2f"%train_acc)
 
         # TODO: formulate the test loss and accuracy of the MLP
-        y_pred_test = self.feedforward(self.dataset.X_test)
-        test_loss = np.mean(np.square(y_pred_test - self.dataset.y_test))
-        test_acc = np.mean(np.argmax(y_pred_test, axis=1) == np.argmax(self.dataset.y_test, axis=1))
+        y_pred_test = self.feedforward(self.dataset.x_test)
+        test_loss = np.mean(np.square(y_pred_test - self.dataset.y_test_oh))
+        test_acc = np.mean(np.argmax(y_pred_test, axis=1) == self.dataset.y_test)
         print("\tTest loss:      %0.4f"%test_loss)
         print("\tTest accuracy:  %0.2f"%test_acc)
