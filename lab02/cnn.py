@@ -5,43 +5,46 @@ import data_generator
 
 # Different activations functions
 def activation(x, activation):
-    
-    #TODO: specify the different activation functions
-    # 'activation' could be: 'linear', 'relu', 'sigmoid', or 'softmax'
-    if activation == '':
-        pass
-        # TODO
+    if activation == 'linear':
+        return x
+    elif activation == 'relu':
+        return np.maximum(0, x)
+    elif activation == 'sigmoid':
+        return 1 / (1 + np.exp(-x))
+    elif activation == 'softmax':
+        exp_x = np.exp(x - np.max(x))
+        return exp_x / np.sum(exp_x)
     else:
-        raise Exception("Activation function is not valid", activation) 
+        raise ValueError("Activation function is not valid", activation)
 
 # 2D convolutional layer
-def conv2d_layer(h,     # activations from previous layer, shape = [height, width, channels prev. layer]
-                 W,     # conv. kernels, shape = [kernel height, kernel width, channels prev. layer, channels this layer]
+def conv2d_layer(h,     # activations from previous layer, shape = [channels prev. layer, height, width]
+                 W,     # conv. kernels, shape = [channels this layer, channels prev. layer, kernel height, kernel width]
                  b,     # bias vector
                  act    # activation function
 ):
 
-    
-    # TODO: implement the convolutional layer
-    # 1. Specify the number of input and output channels
-    CI = None # Number of input channels
-    CO = None # Number of output channels
-    
-    # 2. Setup a nested loop over the number of output channels 
-    #    and the number of input channels
-    #for i in ...:
-    #    for j in ...:
-            
-    # 3. Get the kernel mapping between channels i and j
-    #        kernel = None
-    # 4. Flip the kernel horizontally and vertically (since
-    #    We want to perform cross-correlation, not convolution.
-    #    You can, e.g., look at np.flipud and np.fliplr
-    # 5. Run convolution (you can, e.g., look at the convolve2d
-    #    function in the scipy.signal library)
-    # 6. Sum convolutions over input channels, as described in the 
-    #    equation for the convolutional layer
-    # 7. Finally, add the bias and apply activation function
+    h = np.asarray(h)
+    W = np.asarray(W)
+    b = np.asarray(b)
+    if h.ndim != 3 or W.ndim != 4:
+        raise ValueError("Expected h as CHW and W as OIHW arrays")
+
+    CO, CI, _, _ = W.shape
+    if h.shape[0] != CI or b.shape != (CO,):
+        raise ValueError("Input channels or bias dimensions do not match weights")
+
+    ho = np.zeros((CO, h.shape[1], h.shape[2]),
+                  dtype=np.result_type(h.dtype, W.dtype, b.dtype))
+    for output_channel in range(CO):
+        for input_channel in range(CI):
+            kernel = np.flip(W[output_channel, input_channel], axis=(0, 1))
+            ho[output_channel] += signal.convolve2d(
+                h[input_channel], kernel, mode='same'
+            )
+
+    ho += b[:, np.newaxis, np.newaxis]
+    return activation(ho, act)
 
 
 # 2D max pooling layer
